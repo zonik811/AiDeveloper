@@ -9,39 +9,39 @@
 
 ## 1. Resumen Ejecutivo y Caso de Negocio
 
-En operaciones corporativas sobre arquitectura **IBM z/OS y Mainframe** (banca, finanzas, telecomunicaciones):
-- La caída imprevista de un JOB nocturno (ABEND) o un fallo de compilación en programas transaccionales CICS genera incidentes críticos de alta severidad.
-- Los modelos de lenguaje comerciales genéricos desconocen los manuales y estándares internos de codificación (reglas de Área A/B, cálculo de bytes en variables `COMP-3`, uso de `DFHCOMMAREA` y prohibición de `STOP RUN`), tendiendo a **alucinar sintaxis inválida** que puede desestabilizar regiones CICS enteras.
+En las operaciones del core transaccional de nuestro cliente (un **banco** que opera sobre arquitectura **IBM z/OS y Mainframe**):
+- La caída imprevista de un JOB nocturno de pagos (ABEND) o un error de compilación en programas CICS genera incidentes críticos que pueden frenar las operaciones bancarias.
+- Los modelos de lenguaje comerciales genéricos desconocen los manuales y estándares internos de codificación del banco (reglas de Área A/B, cálculo de bytes en variables `COMP-3`, uso de `DFHCOMMAREA` y prohibición estricta de `STOP RUN`), tendiendo a **alucinar sintaxis inválida** que puede desestabilizar regiones CICS completas.
 - **Mainframe Copilot** es una solución de IA para producción que combina:
   1. **Agente Autónomo con Herramientas (Tool Calling):** Diagnostica jobs en ejecución y evalúa el impacto de compilaciones.
-  2. **Pipeline RAG Especializado:** Recupera estándares oficiales citando las fuentes (`Chunk ID`) con tolerancia cero a la alucinación.
-  3. **Capa de Seguridad Defensiva (OWASP LLM 2025):** Mitiga activamente inyecciones de prompt, fugas de credenciales, peticiones abusivas y ataques de denegación de servicio.
-  4. **Arquitectura de Operación (LLMOps):** Versionado estricto de prompts y modelos, caché de alta velocidad basada en SHA-256 (latencia < 1ms a costo $0), observabilidad estructurada en JSON y pipeline de CI/CD con **Quality Gate** que bloquea despliegues ante cualquier regresión.
+  2. **Pipeline RAG Especializado:** Recupera estándares oficiales del banco citando las fuentes (`Chunk ID`) con tolerancia cero a la alucinación.
+  3. **Capa de Seguridad Defensiva (OWASP LLM 2025):** Mitiga activamente inyecciones de prompt, fugas de credenciales y denegación de servicio.
+  4. **Arquitectura de Operación (LLMOps):** Versionado estricto, caché SHA-256 (latencia < 1ms y $0 USD), observabilidad JSON y pipeline de CI/CD con **Quality Gate**.
 
 ---
 
-## 2. Diagrama de Arquitectura del Sistema (Flujo de Arriba a Abajo)
-
-El sistema procesa cada petición siguiendo un flujo estrictamente secuencial y en capas:
+## 2. Diagrama de Arquitectura del Sistema
 
 ```mermaid
 flowchart TD
-    Paso1["1. Entrada del Desarrollador<br>Consulta técnica o reporte de caída de un JOB"]
-    Paso2["2. Capa de Seguridad Defensiva OWASP (Tema 7)<br>Detección de Prompt Injection (LLM01), fuga (LLM07) y Rate Limiting (LLM10)"]
-    Paso3["3. Capa de Caché SHA-256 (Tema 8 - LLMOps)<br>Respuestas idénticas resueltas en 0.0001s con costo $0.00 USD"]
-    Paso4["4. Bucle del Agente y Herramientas (Tema 4 & 2)<br>Ejecuta: consultar_estado_job_batch() o analizar_impacto_compilacion()"]
-    Paso5["5. Motor RAG Semántico (Tema 3)<br>Recupera estándares oficiales de codificación COBOL/CICS (Chunks 1 al 5)"]
-    Paso6["6. Inferencia del Modelo LLM (Tema 1 & 2)<br>Modelo Groq (GPT-OSS 120B) / Haiku a Temp 0.0 con cita obligatoria de fuentes"]
-    Paso7["7. Saneamiento y Observabilidad (Tema 7 & 8)<br>Validación anti-XSS (LLM05) y registro de traza JSON en llmops_observability.log"]
-    Paso8["8. Entrega al Desarrollador<br>Diagnóstico con datos reales del Job y recomendación técnica auditada"]
-
-    Paso1 --> Paso2
-    Paso2 --> Paso3
-    Paso3 --> Paso4
-    Paso4 --> Paso5
-    Paso5 --> Paso6
-    Paso6 --> Paso7
-    Paso7 --> Paso8
+    User["Desarrollador / Soporte"] -->|"Consulta sobre el core bancario"| Security["Capa de Seguridad OWASP (Tema 7)<br>- Detección de Prompt Injection (LLM01)<br>- Protección de System Prompt (LLM07)<br>- Rate Limiting por usuario (LLM10)"]
+    
+    Security -->|"Petición Aprobada"| CacheCheck{"¿Está en Caché SHA-256?<br>(Tema 8 LLMOps)"}
+    
+    CacheCheck -->|"Sí (Cache Hit)"| FastResp["Respuesta Inmediata (~1ms)<br>Costo: $0.00 USD"]
+    CacheCheck -->|"No (Cache Miss)"| AgentLoop["Bucle del Agente (Tema 4)<br>Percibir - Planear - Actuar"]
+    
+    AgentLoop -->|"¿Menciona un Job?"| Tools["Herramientas del Agente<br>- consultar_estado_job_batch()<br>- analizar_impacto_compilacion()"]
+    Tools -->|"Datos del Spool JES2"| AgentLoop
+    
+    AgentLoop --> RAG["Motor RAG Semántico (Tema 3)<br>Búsqueda en Base de Estándares COBOL/CICS"]
+    RAG --> Ingestion["System Prompt v2.1.0-cics (Tema 2)<br>Modelo: Groq (GPT-OSS 120B) / Haiku<br>Temp: 0.0 | Cita obligatoria de Chunks"]
+    
+    Ingestion --> Sanitize["Saneamiento de Salida (LLM05)<br>Escape y validación anti-XSS"]
+    Sanitize --> CacheStore["Guardar en Caché SHA-256"]
+    CacheStore --> ObsLog["Observabilidad y Logging (Tema 8)<br>Registro JSON en llmops_observability.log"]
+    FastResp --> ObsLog
+    ObsLog --> Output["Respuesta al Desarrollador"]
 ```
 
 ---
