@@ -86,7 +86,16 @@ MOCK_BATCH_JOBS_DB = {
 # HANDLERS DE EJECUCIÓN DE LAS HERRAMIENTAS
 # =====================================================================
 def consultar_estado_job_batch(job_id: str) -> Dict[str, Any]:
-    """Ejecuta la consulta en el catálogo JES2."""
+    """
+    Ejecuta la consulta del estado del JOB en el spool JES2.
+    
+    NOTA DE ARQUITECTURA PRODUCTIVA:
+    Para efectos de esta demostración y pruebas locales aisladas, esta función
+    simula la consulta al catálogo del spool JES2 con datos de prueba.
+    En un entorno productivo real del banco, esta misma herramienta se conecta
+    directamente al Host mediante z/OSMF REST API (IBM z/OS Management Facility)
+    o un conector MCP de z/OS.
+    """
     job_id_clean = job_id.strip().upper()
     if job_id_clean in MOCK_BATCH_JOBS_DB:
         return {

@@ -18,6 +18,9 @@ En las operaciones del core transaccional de nuestro cliente (un **banco** que o
   3. **Capa de Seguridad Defensiva (OWASP LLM 2025):** Mitiga activamente inyecciones de prompt, fugas de credenciales y denegación de servicio.
   4. **Arquitectura de Operación (LLMOps):** Versionado estricto, caché SHA-256 (latencia < 1ms y $0 USD), observabilidad JSON y pipeline de CI/CD con **Quality Gate**.
 
+> **Nota de Integración con el Host (Mainframe):**  
+> Para efectos de esta entrega y pruebas locales aisladas, la herramienta `consultar_estado_job_batch` simula la lectura del catálogo JES2. En el entorno productivo real del banco, esta misma herramienta se conecta directamente al Host mediante **IBM z/OSMF REST APIs** o mediante un servidor **MCP (Model Context Protocol)** que expone la lista de jobs y sus salidas de log en tiempo real.
+
 ---
 
 ## 2. Diagrama de Arquitectura del Sistema
