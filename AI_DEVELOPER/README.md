@@ -20,28 +20,28 @@ En operaciones corporativas sobre arquitectura **IBM z/OS y Mainframe** (banca, 
 
 ---
 
-## 2. Diagrama de Arquitectura del Sistema
+## 2. Diagrama de Arquitectura del Sistema (Flujo de Arriba a Abajo)
+
+El sistema procesa cada petición siguiendo un flujo estrictamente secuencial y en capas:
 
 ```mermaid
 flowchart TD
-    User["Desarrollador / Soporte L1-L2"] -->|"Consulta Técnica o Incidencia"| Security["Capa de Seguridad OWASP (Tema 7)<br>- Detección de Prompt Injection (LLM01)<br>- Protección de System Prompt (LLM07)<br>- Rate Limiting por usuario (LLM10)"]
-    
-    Security -->|"Consulta Aprobada"| CacheCheck{"¿Está en Caché SHA-256?<br>(Tema 8 LLMOps)"}
-    
-    CacheCheck -->|"Sí (Cache Hit)"| FastResp["Respuesta Inmediata (~1ms)<br>Costo: $0.00 USD"]
-    CacheCheck -->|"No (Cache Miss)"| AgentLoop["Bucle del Agente (Tema 4)<br>Percibir - Planear - Actuar"]
-    
-    AgentLoop -->|"¿Requiere datos de ejecución?"| Tools["Herramientas del Agente<br>- consultar_estado_job_batch()<br>- analizar_impacto_compilacion()"]
-    Tools -->|"Retorno de estado/log"| AgentLoop
-    
-    AgentLoop --> RAG["Motor RAG Semántico (Tema 3)<br>Búsqueda en Base de Conocimiento CICS/COBOL"]
-    RAG --> Ingestion["System Prompt v2.1.0-cics (Tema 2)<br>Modelo: Groq (GPT-OSS 120B) / Haiku<br>Temp: 0.0 | Cita obligatoria de Chunks"]
-    
-    Ingestion --> Sanitize["Saneamiento de Salida (LLM05)<br>Escape y validación anti-XSS"]
-    Sanitize --> CacheStore["Almacenamiento en Caché SHA-256"]
-    CacheStore --> ObsLog["Observabilidad y Logging (Tema 8)<br>Registro JSON en llmops_observability.log"]
-    FastResp --> ObsLog
-    ObsLog --> Output["Entrega al Desarrollador"]
+    Paso1["1. Entrada del Desarrollador<br>Consulta técnica o reporte de caída de un JOB"]
+    Paso2["2. Capa de Seguridad Defensiva OWASP (Tema 7)<br>Detección de Prompt Injection (LLM01), fuga (LLM07) y Rate Limiting (LLM10)"]
+    Paso3["3. Capa de Caché SHA-256 (Tema 8 - LLMOps)<br>Respuestas idénticas resueltas en 0.0001s con costo $0.00 USD"]
+    Paso4["4. Bucle del Agente y Herramientas (Tema 4 & 2)<br>Ejecuta: consultar_estado_job_batch() o analizar_impacto_compilacion()"]
+    Paso5["5. Motor RAG Semántico (Tema 3)<br>Recupera estándares oficiales de codificación COBOL/CICS (Chunks 1 al 5)"]
+    Paso6["6. Inferencia del Modelo LLM (Tema 1 & 2)<br>Modelo Groq (GPT-OSS 120B) / Haiku a Temp 0.0 con cita obligatoria de fuentes"]
+    Paso7["7. Saneamiento y Observabilidad (Tema 7 & 8)<br>Validación anti-XSS (LLM05) y registro de traza JSON en llmops_observability.log"]
+    Paso8["8. Entrega al Desarrollador<br>Diagnóstico con datos reales del Job y recomendación técnica auditada"]
+
+    Paso1 --> Paso2
+    Paso2 --> Paso3
+    Paso3 --> Paso4
+    Paso4 --> Paso5
+    Paso5 --> Paso6
+    Paso6 --> Paso7
+    Paso7 --> Paso8
 ```
 
 ---
