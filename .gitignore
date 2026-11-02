@@ -1,0 +1,13 @@
+# Entornos y credenciales (OWASP LLM02)
+.env
+*.env
+__pycache__/
+*.pyc
+
+# Archivos temporales de Office / Word
+~$*
+*.tmp
+
+# Notas internas y guiones de grabación
+*GUION*.md
+*guion*.md

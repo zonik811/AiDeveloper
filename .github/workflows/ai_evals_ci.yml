@@ -1,0 +1,35 @@
+name: AI Quality Gate & Regression Evals (LLMOps)
+
+# Se ejecuta automáticamente en cada push o pull request hacia la rama principal
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  evals-quality-gate:
+    name: LLMOps Automated Evaluation Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests python-docx
+
+      - name: Ingesta RAG y Construcción de Base Vectorial
+        run: |
+          python AI_DEVELOPER/ingesta_rag.py
+
+      - name: Ejecutar Quality Gate de CI/CD (Evals Automatizados)
+        run: |
+          python AI_DEVELOPER/test_evals_ci.py
